@@ -121,6 +121,7 @@ class HFRemoteVAEDecode:
     def INPUT_TYPES(s):
         return {"required": {
                     "samples": ("LATENT",),
+                    "VAE_type": (["Flux", "SDXL", "HunyuanVideo"],),
                     },
                 }
 
@@ -129,12 +130,14 @@ class HFRemoteVAEDecode:
     FUNCTION = "decode"
     CATEGORY = "HFRemoteVae"
 
-    def decode(self, samples):
+    def decode(self, samples, VAE_type):
         latents = samples["samples"]#.squeeze(0).permute(1, 0, 2, 3).contiguous()
-        if len(latents.shape) == 5:
+        if VAE_type == "HunyuanVideo":
             endpoint ="https://o7ywnmrahorts457.us-east-1.aws.endpoints.huggingface.cloud/"
-        else:
+        elif VAE_type == "Flux":
             endpoint="https://whhx50ex1aryqvw6.us-east-1.aws.endpoints.huggingface.cloud/"
+        elif VAE_type == "SDXL":
+            endpoint="https://x2dmsqunjd6k9prw.us-east-1.aws.endpoints.huggingface.cloud/"
         result = remote_decode(
             endpoint=endpoint,
             tensor=latents,
@@ -147,10 +150,9 @@ class HFRemoteVAEDecode:
             output_tensor_type="binary",
             do_scaling=False
         )
-        if len(latents.shape) == 5:
+        if VAE_type == "HunyuanVideo":
             video_processor = VideoProcessor(vae_scale_factor=8)
             video_processor.config.do_resize = False
-
             video = video_processor.postprocess_video(video=result, output_type="pt")
             out = video[0].permute(0, 2, 3, 1).cpu().float()
         else:
