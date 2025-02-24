@@ -138,7 +138,7 @@ class HFRemoteVAEDecode:
         result = remote_decode(
             endpoint=endpoint,
             tensor=latents,
-            #height=latents.shape[2] * 8,
+            height=latents.shape[2] * 8,
             width=latents.shape[3] * 8,
             processor=None,
             output_type="pt",
