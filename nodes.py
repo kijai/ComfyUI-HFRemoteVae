@@ -158,6 +158,9 @@ class HFRemoteVAEDecode:
             video = video_processor.postprocess_video(video=result, output_type="pt")
             out = video[0].permute(0, 2, 3, 1).cpu().float()
         else:
+            image_processor = VaeImageProcessor(vae_scale_factor=8)
+            image_processor.config.do_resize = False
+            result = image_processor.postprocess(result, output_type="pt")
             out = result.permute(0, 2, 3, 1).cpu().float()
 
         return (out,)
