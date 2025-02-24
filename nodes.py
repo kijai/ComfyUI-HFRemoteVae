@@ -131,7 +131,9 @@ class HFRemoteVAEDecode:
     CATEGORY = "HFRemoteVae"
 
     def decode(self, samples, VAE_type):
-        latents = samples["samples"]#.squeeze(0).permute(1, 0, 2, 3).contiguous()
+        latents = samples["samples"]
+        vae_scale_factor = 8
+
         if VAE_type == "HunyuanVideo":
             endpoint ="https://o7ywnmrahorts457.us-east-1.aws.endpoints.huggingface.cloud/"
         elif VAE_type == "Flux":
@@ -140,11 +142,12 @@ class HFRemoteVAEDecode:
             endpoint="https://x2dmsqunjd6k9prw.us-east-1.aws.endpoints.huggingface.cloud/"
         elif VAE_type == "SD":
             endpoint="https://q1bj3bpq6kzilnsu.us-east-1.aws.endpoints.huggingface.cloud/"
+
         result = remote_decode(
             endpoint=endpoint,
             tensor=latents,
-            height=latents.shape[2] * 8,
-            width=latents.shape[3] * 8,
+            height=latents.shape[2] * vae_scale_factor,
+            width=latents.shape[3] * vae_scale_factor,
             processor=None,
             output_type="pt",
             partial_postprocess=False,
@@ -152,13 +155,14 @@ class HFRemoteVAEDecode:
             output_tensor_type="binary",
             do_scaling=False
         )
+        
         if VAE_type == "HunyuanVideo":
-            video_processor = VideoProcessor(vae_scale_factor=8)
+            video_processor = VideoProcessor(vae_scale_factor=vae_scale_factor)
             video_processor.config.do_resize = False
             video = video_processor.postprocess_video(video=result, output_type="pt")
             out = video[0].permute(0, 2, 3, 1).cpu().float()
         else:
-            image_processor = VaeImageProcessor(vae_scale_factor=8)
+            image_processor = VaeImageProcessor(vae_scale_factor=vae_scale_factor)
             image_processor.config.do_resize = False
             result = image_processor.postprocess(result, output_type="pt")
             out = result.permute(0, 2, 3, 1).cpu().float()
