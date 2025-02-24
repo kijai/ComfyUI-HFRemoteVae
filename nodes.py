@@ -121,7 +121,7 @@ class HFRemoteVAEDecode:
     def INPUT_TYPES(s):
         return {"required": {
                     "samples": ("LATENT",),
-                    "VAE_type": (["Flux", "SDXL", "HunyuanVideo"],),
+                    "VAE_type": (["Flux", "SDXL", "SD","HunyuanVideo"],),
                     },
                 }
 
@@ -138,6 +138,8 @@ class HFRemoteVAEDecode:
             endpoint="https://whhx50ex1aryqvw6.us-east-1.aws.endpoints.huggingface.cloud/"
         elif VAE_type == "SDXL":
             endpoint="https://x2dmsqunjd6k9prw.us-east-1.aws.endpoints.huggingface.cloud/"
+        elif VAE_type == "SD":
+            endpoint="https://q1bj3bpq6kzilnsu.us-east-1.aws.endpoints.huggingface.cloud/"
         result = remote_decode(
             endpoint=endpoint,
             tensor=latents,
