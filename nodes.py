@@ -233,5 +233,5 @@ NODE_CLASS_MAPPINGS = {
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "HFRemoteVAEDecode": "HFRemoteVAEDecode",
-    "HFRemoteVAE": "HFRemoteVAE",
+    "HFRemoteVAE": "HFRemoteVAE(Decode Only)",
 }
