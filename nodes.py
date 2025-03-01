@@ -115,7 +115,38 @@ def remote_decode(
         output = response.content
     return output
 
-#region VideoDecode
+class RemoteVAE:
+    def __init__(self, endpoint: str, vae_scale_factor: int = 8):
+        self.endpoint = endpoint
+        self.vae_scale_factor = vae_scale_factor
+
+    def decode(self, latents: torch.Tensor) -> torch.Tensor:
+        result = remote_decode(
+            endpoint=self.endpoint,
+            tensor=latents,
+            height=latents.shape[2] * self.vae_scale_factor,
+            width=latents.shape[3] * self.vae_scale_factor,
+            processor=None,
+            output_type="pt",
+            partial_postprocess=False,
+            input_tensor_type="binary",
+            output_tensor_type="binary",
+            do_scaling=False
+        )
+        
+        if "HunyuanVideo" in self.endpoint:
+            video_processor = VideoProcessor(vae_scale_factor=self.vae_scale_factor)
+            video_processor.config.do_resize = False
+            video = video_processor.postprocess_video(video=result, output_type="pt")
+            out = video[0].permute(0, 2, 3, 1).cpu().float()
+        else:
+            image_processor = VaeImageProcessor(vae_scale_factor=self.vae_scale_factor)
+            image_processor.config.do_resize = False
+            result = image_processor.postprocess(result, output_type="pt")
+            out = result.permute(0, 2, 3, 1).cpu().float()
+
+        return out
+
 class HFRemoteVAEDecode:
     @classmethod
     def INPUT_TYPES(s):
@@ -135,13 +166,13 @@ class HFRemoteVAEDecode:
         vae_scale_factor = 8
 
         if VAE_type == "HunyuanVideo":
-            endpoint ="https://o7ywnmrahorts457.us-east-1.aws.endpoints.huggingface.cloud/"
+            endpoint = "https://o7ywnmrahorts457.us-east-1.aws.endpoints.huggingface.cloud/"
         elif VAE_type == "Flux":
-            endpoint="https://whhx50ex1aryqvw6.us-east-1.aws.endpoints.huggingface.cloud/"
+            endpoint = "https://whhx50ex1aryqvw6.us-east-1.aws.endpoints.huggingface.cloud/"
         elif VAE_type == "SDXL":
-            endpoint="https://x2dmsqunjd6k9prw.us-east-1.aws.endpoints.huggingface.cloud/"
+            endpoint = "https://x2dmsqunjd6k9prw.us-east-1.aws.endpoints.huggingface.cloud/"
         elif VAE_type == "SD":
-            endpoint="https://q1bj3bpq6kzilnsu.us-east-1.aws.endpoints.huggingface.cloud/"
+            endpoint = "https://q1bj3bpq6kzilnsu.us-east-1.aws.endpoints.huggingface.cloud/"
 
         result = remote_decode(
             endpoint=endpoint,
@@ -169,10 +200,38 @@ class HFRemoteVAEDecode:
 
         return (out,)
 
+class HFRemoteVAE: # for nodes that require vae input. /decode only.
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "VAE_type": (["Flux", "SDXL", "SD","HunyuanVideo"],),
+                    },
+                }
+
+    RETURN_TYPES = ("VAE",)
+    RETURN_NAMES = ("vae",)
+    FUNCTION = "create_vae"
+    CATEGORY = "HFRemoteVae"
+
+    def create_vae(self, VAE_type):
+        if VAE_type == "HunyuanVideo":
+            endpoint = "https://o7ywnmrahorts457.us-east-1.aws.endpoints.huggingface.cloud/"
+        elif VAE_type == "Flux":
+            endpoint = "https://whhx50ex1aryqvw6.us-east-1.aws.endpoints.huggingface.cloud/"
+        elif VAE_type == "SDXL":
+            endpoint = "https://x2dmsqunjd6k9prw.us-east-1.aws.endpoints.huggingface.cloud/"
+        elif VAE_type == "SD":
+            endpoint = "https://q1bj3bpq6kzilnsu.us-east-1.aws.endpoints.huggingface.cloud/"
+
+        vae = RemoteVAE(endpoint)
+        return (vae,)
 
 NODE_CLASS_MAPPINGS = {
     "HFRemoteVAEDecode": HFRemoteVAEDecode,
-    }
+    "HFRemoteVAE": HFRemoteVAE,
+}
+
 NODE_DISPLAY_NAME_MAPPINGS = {
     "HFRemoteVAEDecode": "HFRemoteVAEDecode",
-    }
+    "HFRemoteVAE": "HFRemoteVAE",
+}
