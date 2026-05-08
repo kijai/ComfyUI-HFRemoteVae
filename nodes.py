@@ -7,7 +7,8 @@ from typing import cast, List, Literal, Optional, Union
 
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.video_processor import VideoProcessor
-from safetensors.torch import _tobytes
+def _tobytes(tensor, name):
+    return tensor.contiguous().cpu().numpy().tobytes()
 
 DTYPE_MAP = {
     "float16": torch.float16,
