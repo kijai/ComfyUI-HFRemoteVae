@@ -1,0 +1,15 @@
+[project]
+name = "hfremotevae"
+description = "This node allows using Hugginface remote server for latent decoding. Currently supported models: SD, SDXL, Flux, HunyuanVideo"
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["diffusers"]
+
+[project.urls]
+Repository = "https://github.com/kijai/ComfyUI-HFRemoteVae"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-HFRemoteVae"
+Icon = ""
